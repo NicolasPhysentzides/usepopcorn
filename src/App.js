@@ -1,11 +1,8 @@
 //Module: "react" library
 //Hook: useState is a React Hook to manage state.
 
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import StarRating from "./StarRating";
-import { set } from "@project-serum/anchor/dist/cjs/utils/features";
-
 const tempMovieData = [
   {
     imdbID: "tt1375666",
@@ -94,10 +91,16 @@ const KEY = "cf4a00d2";
 export default function App() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+  // We can define State based and use a callback function to initialize the state
+  // Functions must be pure and accept no arguments.Called only at initial rendering
+  // View lecture slides 231
+  const [watched, setWatched] = useState(function () {
+    const storage = localStorage.getItem("watched");
+    return JSON.parse(storage);
+  });
 
   // useEffect(function () {
   //   console.log("After initial rendering");
@@ -129,11 +132,19 @@ export default function App() {
 
   function handleAddWatched(movie) {
     setWatched((watched) => [...watched, movie]);
+    // localStorage.setItem("watched", JSON.stringify([...watched, movie]));
   }
 
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
+
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched]
+  );
 
   useEffect(
     function () {
@@ -260,6 +271,25 @@ function Logo() {
 }
 
 function Search({ query, setQuery }) {
+  const inputEl = useRef(null);
+  useEffect(
+    function () {
+      function callback(e) {
+        if (document.activeElement === inputEl.current) return;
+        if (e.code === "Enter") {
+          inputEl.current.focus();
+          setQuery("");
+        }
+      }
+      document.addEventListener("keydown", callback);
+      return () => document.removeEventListener("keydown", callback);
+    },
+    [setQuery]
+  );
+  // useEffect(function () {
+  //   const el = document.querySelector(".search");
+  //   el.focus();
+  // }, []);
   return (
     <input
       className="search"
@@ -267,6 +297,7 @@ function Search({ query, setQuery }) {
       placeholder="Search movies..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
+      ref={inputEl}
     />
   );
 }
