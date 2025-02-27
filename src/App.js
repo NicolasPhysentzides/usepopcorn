@@ -286,7 +286,7 @@ function Search({ query, setQuery }) {
     },
     [setQuery]
   );
-  // useEffect(function () {
+  // useEffect(function () {/
   //   const el = document.querySelector(".search");
   //   el.focus();
   // }, []);
